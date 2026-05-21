@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Financial Management & Ledger Suite</title>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #0284c7;
+            --accent-hover: #0369a1;
+            --success: #16a34a;
+            --warning: #ea580c;
+            --danger: #dc2626;
+            --background: #f1f5f9;
+            --surface: #ffffff;
+            --border: #cbd5e1;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --radius: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            padding: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 { font-size: 1.6rem; color: var(--primary); }
+        h2 { font-size: 1.15rem; margin-bottom: 1rem; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;}
+        h3 { font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--text); }
+
+        /* Tabs System Layout */
+        .navigation-panel {
+            display: flex;
+            gap: 0.25rem;
+            margin-bottom: 1.5rem;
+            background: #e2e8f0;
+            padding: 0.35rem;
+            border-radius: var(--radius);
+            overflow-x: auto;
+        }
+
+        .tab-trigger {
+            background: none;
+            border: none;
+            padding: 0.65rem 1.1rem;
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: #475569;
+            cursor: pointer;
+            white-space: nowrap;
+            border-radius: calc(var(--radius) - 3px);
+            transition: all 0.15s ease;
+        }
+
+        .tab-trigger:hover { background: rgba(255,255,255,0.4); }
+        .tab-trigger.active { background: var(--surface); color: var(--accent); box-shadow: 0 1px 3px rgba(0,0,0,0.08); font-weight: 600; }
+
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; animation: fadeIn 0.2s ease-in-out; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Grid Layout Frameworks */
+        .grid-3-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+        .grid-2-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .dashboard-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+
+        @media (max-width: 1024px) {
+            .grid-3-1, .grid-2-2 { grid-template-columns: 1fr; }
+        }
+
+        /* Card Mechanics */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        .metric-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .metric-card.accented { border-left: 4px solid var(--accent); }
+        .metric-card.success { border-left: 4px solid var(--success); }
+        .metric-card.warning { border-left: 4px solid var(--warning); }
+        .metric-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.25rem; }
+        .metric-val { font-size: 1.4rem; font-weight: 700; color: var(--primary); }
+
+        /* Forms Styling */
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group.full-width { grid-column: span 2; }
+        label { display: block; margin-bottom: 0.35rem; font-size: 0.82rem; font-weight: 600; color: #475569; }
+        input, select, textarea {
+            width: 100%; padding: 0.55rem; border: 1px solid var(--border);
+            border-radius: var(--radius); font-size: 0.9rem; background: #fff; color: var(--text);
+        }
+        input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
+
+        /* Interactive Buttons */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+            padding: 0.6rem 1.25rem; border-radius: var(--radius); font-size: 0.9rem;
+            font-weight: 500; cursor: pointer; border: none; transition: background 0.2s ease;
+        }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-secondary { background: #e2e8f0; color: #334155; }
+        .btn-secondary:hover { background: #cbd5e1; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-block { width: 100%; }
+        .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.8rem; border-radius: 4px; }
+
+        /* Structured Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 0.25rem; font-size: 0.86rem; }
+        th, td { padding: 0.65rem 0.85rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background-color: #f8fafc; font-weight: 600; color: #64748b; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        tr:hover { background-color: #f8fafc; }
+        .text-right { text-align: right; }
+        .cr-amt { color: var(--success); font-weight: 500; }
+        .dr-amt { color: var(--danger); font-weight: 500; }
+
+        /* Dynamic System Status Visuals */
+        .status-pill {
+            display: inline-block; padding: 0.18rem 0.5rem; border-radius: 20px;
+            font-size: 0.72rem; font-weight: 600; text-transform: uppercase; text-align: center;
+        }
+        .sp-matched { background: #dcfce7; color: #15803d; }
+        .sp-unmatched { background: #fee2e2; color: #b91c1c; }
+        .sp-settled { background: #e0f2fe; color: #0369a1; }
+
+        .progress-container { background: #e2e8f0; border-radius: 10px; height: 8px; width: 100%; margin-top: 0.4rem; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--accent); transition: width 0.3s ease; }
+        .progress-bar.over { background: var(--danger); }
+
+        /* API Mobile Money Simulation Output Display Box */
+        .api-monitor {
+            background: #0f172a; color: #38bdf8; font-family: monospace; font-size: 0.8rem;
+            padding: 0.85rem; border-radius: 6px; overflow-y: auto; max-height: 160px; margin-top: 0.75rem;
+            border: 1px solid #1e293b; line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div>
+            <h1>Financial Management & Ledger Engine</h1>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">Double-Entry Ledger, Budget Tracking & Mobile Integrations</p>
+        </div>
+        <div>
+            <span style="font-size: 0.85rem; font-weight: 600; background: #e2e8f0; padding: 0.4rem 0.75rem; border-radius: 4px;">
+                Fiscal Year: <span id="currentSystemDate">2026</span>
+            </span>
+        </div>
+    </header>
+
+    <!-- Navigation Hub -->
+    <nav class="navigation-panel">
+        <button class="tab-trigger active" onclick="toggleView('dashboard-tab')">📊 Banking & Savings</button>
+        <button class="tab-trigger" onclick="toggleView('ledger-tab')">📖 General Ledger</button>
+        <button class="tab-trigger" onclick="toggleView('budget-tab')">🎯 Budgets & Cash Flow</button>
+        <button class="tab-trigger" onclick="toggleView('recon-tab')">🔄 Bank Reconciliation</button>
+        <button class="tab-trigger" onclick="toggleView('integration-tab')">📱 Mobile Money API</button>
+    </nav>
+
+    <!-- SYSTEM GLOBAL OVERVIEW TRACKER -->
+    <div class="dashboard-row">
+        <div class="metric-card accented">
+            <span class="metric-title">Cash & Bank Balance</span>
+            <span class="metric-val" id="globalBankBal">$0.00</span>
+        </div>
+        <div class="metric-card success">
+            <span class="metric-title">Total Member Savings</span>
+            <span class="metric-val" id="globalSavingsBal">$0.00</span>
+        </div>
+        <div class="metric-card">
+            <span class="metric-title">Net Cash Flow (MTD)</span>
+            <span class="metric-val" id="globalCashFlow">$0.00</span>
+        </div>
+        <div class="metric-card warning">
+            <span class="metric-title">Active Budget Burn</span>
+            <span class="metric-val" id="globalBudgetBurn">0%</span>
+        </div>
+    </div>
+
+    <!-- 1. BANKING & SAVINGS TRACKING MODULE -->
+    <section id="dashboard-tab" class="tab-pane active">
+        <div class="grid-3-1">
+            <div class="card">
+                <h2>Savings Accounts & Capital Movement Registry</h2>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Account Number</th>
+                                <th>Account Holder</th>
+                                <th>Account Type</th>
+                                <th class="text-right">Withdrawable Balance</th>
+                                <th class="text-right">Locked Shares</th>
+                            </tr>
+                        </thead>
+                        <tbody id="savingsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Post Internal Transaction</h2>
+                <form id="bankingForm" onsubmit="executeTransaction(event)">
+                    <div class="form-group">
+                        <label for="bankAccount">Select Member Target Account</label>
+                        <select id="bankAccount" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="txType">Transaction Processing Type</label>
+                        <select id="txType" required>
+                            <option value="Deposit">Deposit (Cash Inflow)</option>
+                            <option value="Withdrawal">Withdrawal (Cash Outflow)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="txAmount">Transaction Amount ($)</label>
+                        <input type="number" id="txAmount" min="1" step="0.01" required placeholder="0.00">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Commit Journal Entry</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. ACCOUNTING & GENERAL LEDGER MANAGEMENT -->
+    <section id="ledger-tab" class="tab-pane">
+        <div class="card">
+            <h2>Double-Entry General Ledger (Unified Audit Trail)</h2>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem;">
+                Every capital transaction generates balancing matching Credit (CR) and Debit (DR) structural entries.
+            </p>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>TX ID</th>
+                            <th>Chart Account / Category</th>
+                            <th>Description Reference</th>
+                            <th class="text-right">Debit (DR)</th>
+                            <th class="text-right">Credit (CR)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledgerTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. CASH FLOW MONITORING & BUDGET MANAGEMENT -->
+    <section id="budget-tab" class="tab-pane">
+        <div class="grid-2-2">
+            <div class="card">
+                <h2>Fiscal Appropriations & Budget Control Enforcer</h2>
+                <div id="budgetTrackerContainer"></div>
+            </div>
+
+            <div class="card">
+                <h2>Post Operational Expense</h2>
+                <form id="expenseForm" onsubmit="executeExpense(event)">
+                    <div class="form-group">
+                        <label for="expenseCategory">Select Target Budget Envelope</label>
+                        <select id="expenseCategory" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseAmount">Disbursement Value ($)</label>
+                        <input type="number" id="expenseAmount" min="0.01" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseDesc">Line-Item Reference Note</label>
+                        <input type="text" id="expenseDesc" placeholder="Office supplies, lease payload..." required>
+                    </div>
+                    <button type="submit" class="btn btn-danger btn-block">Post Outflow Charge</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. FINANCIAL BANK RECONCILIATION -->
+    <section id="recon-tab" class="tab-pane">
+        <div class="grid-3-1">
+            <div class="card">
+                <h2>Automated Bank Reconciliation Ledger Matrix</h2>
+                <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem;">
+                    Matches core enterprise ledger entries against un-cleared commercial bank processing feed payloads.
+                </p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>System Date</th>
+                            <th>System Reference</th>
+                            <th>Ledger Value</th>
+                            <th>Statement Feed Match</th>
+                            <th>Status</th>
+                            <th>Reconcile Handshake</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reconTableBody"></tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h2>Reconciliation Integrity Audit</h2>
+                <div style="padding: 0.5rem 0;">
+                    <p style="font-size: 0.85rem; margin-bottom: 0.5rem;"><strong>Ledger Bank Balance:</strong> <span id="recLedgerBal">$0.00</span></p>
+                    <p style="font-size: 0.85rem; margin-bottom: 0.5rem;"><strong>Statement Balance:</strong> <span id="recStatementBal">$0.00</span></p>
+                    <hr style="border: 0; border-top: 1px solid var(--border); margin: 0.5rem 0;">
+                    <p style="font-size: 0.9rem; font-weight: 700;">Unreconciled Spread: <span id="recVariance" style="color:var(--danger)">$0.00</span></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. MOBILE MONEY INTEGRATION SIMULATOR (API SUITE) -->
+    <section id="integration-tab" class="tab-pane">
+        <div class="grid-2-2">
+            <div class="card">
+                <h2>Instant Mobile Money API Gateway (STK Push Request)</h2>
+                <form id="mobileMoneyForm" onsubmit="triggerStkPush(event)">
+                    <div class="form-group">
+                        <label for="mobileAccount">Link Member Profile</label>
+                        <select id="mobileAccount" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="mobileNetwork">Integration Protocol Channel</label>
+                        <select id="mobileNetwork">
+                            <option value="MPESA">Safaricom M-PESA B2C/C2B Gateway</option>
+                            <option value="AIRTEL">Airtel Money API Engine</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="mobilePhone">Subscriber Mobile Number</label>
+                        <input type="text" id="mobilePhone" value="+254 712 345678" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="mobileAmount">Collection Volatility Amount ($)</label>
+                        <input type="number" id="mobileAmount" min="1" value="25" required>
+                    </div>
+                    <button type="submit" class="btn btn-success btn-block">Dispatch API STK Broadcast Call</button>
+                </form>
+            </div>
+
+            <div class="card" style="background: #0f172a; color: #f8fafc;">
+                <h2 style="color: #38bdf8;">JSON Webhook & Console Stream Log</h2>
+                <p style="font-size: 0.8rem; color: #94a3b8;">Asynchronous network transactions pipeline activity:</p>
+                <div class="api-monitor" id="apiMonitorConsole">
+                    [System Status] Gateway online. Socket handlers listening on ports 443/8080...
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+    // State Preservation Models
+    let accounts = [
+        { accNo: "SAV-4091", owner: "Charles Letaya", type: "Ordinary Savings", balance: 4200.00, shares: 1500.00 },
+        { accNo: "SAV-8821", owner: "Emmanuel Lemiso", type: "Premium Capital Account", balance: 12850.00, shares: 5000.00 },
+        { accNo: "SAV-3022", owner: "Dr. Faith Chemutai", type: "Ordinary Savings", balance: 650.00, shares: 250.00 }
+    ];
+
+    let ledger = [
+        { date: "2026-05-10", txId: "TX-1001", account: "Cash at Bank (Asset)", desc: "Opening Balance Setup", dr: 17700.00, cr: 0 },
+        { date: "2026-05-10", txId: "TX-1001", account: "Member Savings (Equity)", desc: "Opening Balance Setup", dr: 0, cr: 17700.00 }
+    ];
+
+    let budgets = [
+        { category: "Operations & Administration", allocated: 5000.00, spent: 1200.00 },
+        { category: "ICT & Infrastructure Systems", allocated: 8000.00, spent: 4350.00 },
+        { category: "Marketing & Public Engagement", allocated: 2500.00, spent: 2400.00 }
+    ];
+
+    let reconciliationFeed = [
+        { date: "2026-05-12", ref: "TX-1001", amount: 17700.00, statementMatched: true, status: "Matched" },
+        { date: "2026-05-14", ref: "DEP-4091", amount: 500.00, statementMatched: false, status: "Unmatched" }
+    ];
+
+    window.addEventListener('DOMContentLoaded', () => {
+        renderAllModules();
+    });
+
+    function toggleView(targetPaneId) {
+        document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-trigger').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(targetPaneId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    // Mathematical Financial Processors
+    function executeTransaction(e) {
+        e.preventDefault();
+        let accId = document.getElementById('bankAccount').value;
+        let type = document.getElementById('txType').value;
+        let amt = parseFloat(document.getElementById('txAmount').value);
+
+        let target = accounts.find(a => a.accNo === accId);
+        if(!target || isNaN(amt) || amt <= 0) return;
+
+        let timestamp = new Date().toISOString().split('T')[0];
+        let trackingId = "TX-" + Math.floor(1002 + Math.random() * 8999);
+
+        if(type === 'Withdrawal') {
+            if(target.balance < amt) { alert("Execution Aborted: Insufficient clearing liquidity."); return; }
+            target.balance -= amt;
+            
+            // Double Entry Mapping: Credit Cash at Bank, Debit Member Savings Equity Account
+            ledger.push({ date: timestamp, txId: trackingId, account: "Member Savings (Equity)", desc: `Withdrawal / ${target.owner}`, dr: amt, cr: 0 });
+            ledger.push({ date: timestamp, txId: trackingId, account: "Cash at Bank (Asset)", desc: `Withdrawal / ${target.owner}`, dr: 0, cr: amt });
+            reconciliationFeed.push({ date: timestamp, ref: trackingId, amount: -amt, statementMatched: false, status: "Unmatched" });
+        } else {
+            target.balance += amt;
+            // Double Entry Mapping: Debit Cash at Bank, Credit Member Savings Equity Account
+            ledger.push({ date: timestamp, txId: trackingId, account: "Cash at Bank (Asset)", desc: `Deposit / ${target.owner}`, dr: amt, cr: 0 });
+            ledger.push({ date: timestamp, txId: trackingId, account: "Member Savings (Equity)", desc: `Deposit / ${target.owner}`, dr: 0, cr: amt });
+            reconciliationFeed.push({ date: timestamp, ref: trackingId, amount: amt, statementMatched: false, status: "Unmatched" });
+        }
+
+        document.getElementById('txAmount').value = "";
+        renderAllModules();
+    }
+
+    function executeExpense(e) {
+        e.preventDefault();
+        let cat = document.getElementById('expenseCategory').value;
+        let amt = parseFloat(document.getElementById('expenseAmount').value);
+        let desc = document.getElementById('expenseDesc').value;
+
+        let targetBudget = budgets.find(b => b.category === cat);
+        if(!targetBudget) return;
+
+        if((targetBudget.spent + amt) > targetBudget.allocated) {
+            if(!confirm("Authorization Notice: Transaction breaks established budget boundaries. Override limits?")) return;
+        }
+
+        targetBudget.spent += amt;
+        let timestamp = new Date().toISOString().split('T')[0];
+        let trackingId = "EXP-" + Math.floor(400 + Math.random() * 500);
+
+        // Double-entry record tracking configuration
+        ledger.push({ date: timestamp, txId: trackingId, account: `Expense (${cat})`, desc: desc, dr: amt, cr: 0 });
+        ledger.push({ date: timestamp, txId: trackingId, account: "Cash at Bank (Asset)", desc: desc, dr: 0, cr: amt });
+        
+        reconciliationFeed.push({ date: timestamp, ref: trackingId, amount: -amt, statementMatched: false, status: "Unmatched" });
+
+        document.getElementById('expenseForm').reset();
+        renderAllModules();
+    }
+
+    function triggerManualRecon(index) {
+        let entry = reconciliationFeed[index];
+        if(entry) {
+            entry.statementMatched = true;
+            entry.status = "Matched";
+            renderAllModules();
+        }
+    }
+
+    // Asynchronous Mobile Money Simulation Call Handler (JSON Parsing Hook)
+    function triggerStkPush(e) {
+        e.preventDefault();
+        let targetAccNo = document.getElementById('mobileAccount').value;
+        let member = accounts.find(a => a.accNo === targetAccNo);
+        let amt = parseFloat(document.getElementById('mobileAmount').value);
+        let phone = document.getElementById('mobilePhone').value;
+        let network = document.getElementById('mobileNetwork').value;
+
+        let consoleLog = document.getElementById('apiMonitorConsole');
+        
+        consoleLog.innerHTML += `<br>[${new Date().toLocaleTimeString()}] >> Dispatching JSON Payload to ${network} Gateway V2 endpoint...`;
+        
+        // Emulating Network Stack Resolution Framework
+        setTimeout(() => {
+            let mockCallbackPayload = {
+                MerchantRequestID: "REQ-" + Math.floor(Math.random()*100000),
+                CheckoutRequestID: "CHk-" + Math.floor(Math.random()*999999),
+                ResultCode: 0,
+                ResultDesc: "The service request processed successfully.",
+                AmountCollected: amt,
+                Msisdn: phone
+            };
+
+            consoleLog.innerHTML += `<br><span style="color:#22c55e;">[Webhook Callback Received] Response code 200 OK:<br>${JSON.stringify(mockCallbackPayload, null, 2)}</span>`;
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+
+            // Silently complete structural allocation inside global tracking states
+            member.balance += amt;
+            let trackingId = "MOB-" + Math.floor(8000+Math.random()*999);
+            let timestamp = new Date().toISOString().split('T')[0];
+            
+            ledger.push({ date: timestamp, txId: trackingId, account: "Cash at Bank (Asset)", desc: `Mobile Money Collection / ${member.owner}`, dr: amt, cr: 0 });
+            ledger.push({ date: timestamp, txId: trackingId, account: "Member Savings (Equity)", desc: `Mobile Money Collection / ${member.owner}`, dr: 0, cr: amt });
+            reconciliationFeed.push({ date: timestamp, ref: trackingId, amount: amt, statementMatched: true, status: "Matched" });
+
+            renderAllModules();
+        }, 1200);
+    }
+
+    // Integrated View Compilers
+    function renderAllModules() {
+        // Computational aggregators
+        let totalSavings = accounts.reduce((sum, current) => sum + current.balance, 0);
+        let netBankCash = ledger.reduce((sum, curr) => curr.account === "Cash at Bank (Asset)" ? sum + (curr.dr - curr.cr) : sum, 0);
+        let totalAllocatedBudget = budgets.reduce((sum, c) => sum + c.allocated, 0);
+        let totalSpentBudget = budgets.reduce((sum, c) => sum + c.spent, 0);
+        let calculatedPercentage = Math.round((totalSpentBudget / totalAllocatedBudget) * 100);
+
+        document.getElementById('globalSavingsBal').innerText = "$" + totalSavings.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('globalBankBal').innerText = "$" + netBankCash.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('globalCashFlow').innerText = "$" + (totalSavings - totalSpentBudget).toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('globalBudgetBurn').innerText = calculatedPercentage + "%";
+
+        renderSavingsTable();
+        renderLedgerTable();
+        renderBudgetControls(calculatedPercentage);
+        renderReconciliationCore(netBankCash);
+        repopulateDropdownOptionContainers();
+    }
+
+    function renderSavingsTable() {
+        let body = document.getElementById('savingsTableBody');
+        body.innerHTML = "";
+        accounts.forEach(a => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><code>${a.accNo}</code></td>
+                <td><strong>${a.owner}</strong></td>
+                <td><span style="color:var(--text-muted); font-size:0.8rem;">${a.type}</span></td>
+                <td class="text-right" style="font-weight:600;">$${a.balance.toFixed(2)}</td>
+                <td class="text-right" style="color:var(--text-muted);">$${a.shares.toFixed(2)}</td>
+            `;
+            body.appendChild(tr);
+        });
+    }
+
+    function renderLedgerTable() {
+        let body = document.getElementById('ledgerTableBody');
+        body.innerHTML = "";
+        [...ledger].reverse().forEach(row => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${row.date}</td>
+                <td><small style="color:var(--text-muted)">${row.txId}</small></td>
+                <td><strong>${row.account}</strong></td>
+                <td>${row.desc}</td>
+                <td class="text-right dr-amt">${row.dr > 0 ? '$'+row.dr.toFixed(2) : '-'}</td>
+                <td class="text-right cr-amt">${row.cr > 0 ? '$'+row.cr.toFixed(2) : '-'}</td>
+            `;
+            body.appendChild(tr);
+        });
+    }
+
+    function renderBudgetControls() {
+        let container = document.getElementById('budgetTrackerContainer');
+        container.innerHTML = "";
+        budgets.forEach(b => {
+            let percentage = Math.min(Math.round((b.spent / b.allocated) * 100), 100);
+            let wrapper = document.createElement('div');
+            wrapper.style.marginBottom = "1.15rem";
+            wrapper.innerHTML = `
+                <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:500;">
+                    <span>${b.category}</span>
+                    <span>$${b.spent.toFixed(2)} / <strong>$${b.allocated.toFixed(2)}</strong> (${percentage}%)</span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar ${percentage >= 90 ? 'over' : ''}" style="width: ${percentage}%"></div>
+                </div>
+            `;
+            container.appendChild(wrapper);
+        });
+    }
+
+    function renderReconciliationCore(internalLedgerTotal) {
+        let body = document.getElementById('reconTableBody');
+        body.innerHTML = "";
+        
+        let statementSumTotal = 0;
+
+        reconciliationFeed.forEach((f, idx) => {
+            if(f.statementMatched) statementSumTotal += f.amount;
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${f.date}</td>
+                <td><code>${f.ref}</code></td>
+                <td>${f.amount < 0 ? '-$' + Math.abs(f.amount).toFixed(2) : '$' + f.amount.toFixed(2)}</td>
+                <td>${f.statementMatched ? '$' + f.amount.toFixed(2) : '$0.00'}</td>
+                <td><span class="status-pill sp-${f.status.toLowerCase()}">${f.status}</span></td>
+                <td>
+                    ${!f.statementMatched ? `
+                        <button class="btn btn-secondary btn-sm" onclick="triggerManualRecon(${idx})">Tick Clear</button>
+                    ` : `<span style="color:var(--success); font-weight:600; font-size:1.1rem;">✓</span>`}
+                </td>
+            `;
+            body.appendChild(tr);
+        });
+
+        let divergence = internalLedgerTotal - statementSumTotal;
+        document.getElementById('recLedgerBal').innerText = "$" + internalLedgerTotal.toFixed(2);
+        document.getElementById('recStatementBal').innerText = "$" + statementSumTotal.toFixed(2);
+        document.getElementById('recVariance').innerText = "$" + divergence.toFixed(2);
+        document.getElementById('recVariance').style.color = divergence === 0 ? "var(--success)" : "var(--danger)";
+    }
+
+    function repopulateDropdownOptionContainers() {
+        let bankSel = document.getElementById('bankAccount');
+        let budgetSel = document.getElementById('expenseCategory');
+        let mobSel = document.getElementById('mobileAccount');
+
+        let originalBankVal = bankSel.value;
+        let originalBudgetVal = budgetSel.value;
+        let originalMobVal = mobSel.value;
+
+        bankSel.innerHTML = accounts.map(a => `<option value="${a.accNo}">${a.owner} (${a.accNo})</option>`).join('');
+        mobSel.innerHTML = bankSel.innerHTML;
+        budgetSel.innerHTML = budgets.map(b => `<option value="${b.category}">${b.category}</option>`).join('');
+
+        if(originalBankVal) bankSel.value = originalBankVal;
+        if(originalBudgetVal) budgetSel.value = originalBudgetVal;
+        if(originalMobVal) mobSel.value = originalMobVal;
+    }
+</script>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+</body>
+</html>

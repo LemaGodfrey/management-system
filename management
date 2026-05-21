@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fixed Assets & Inventory Management Engine</title>
+    <style>
+        :root {
+            --primary: #1e293b;
+            --accent: #4f46e5;
+            --accent-hover: #4338ca;
+            --success: #059669;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --border: #cbd5e1;
+            --text: #334155;
+            --text-muted: #64748b;
+            --radius: 6px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            padding: 2rem;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 { font-size: 1.6rem; color: var(--primary); }
+        h2 { font-size: 1.15rem; margin-bottom: 1rem; color: var(--primary); }
+        h3 { font-size: 0.95rem; margin-bottom: 0.5rem; }
+
+        /* Navigation Panels */
+        .tabs {
+            display: flex;
+            gap: 0.25rem;
+            margin-bottom: 1.5rem;
+            background: #e2e8f0;
+            padding: 0.25rem;
+            border-radius: var(--radius);
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 0.6rem 1rem;
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: #475569;
+            cursor: pointer;
+            flex: 1;
+            border-radius: calc(var(--radius) - 2px);
+            transition: all 0.15s ease;
+        }
+
+        .tab-btn:hover { background: rgba(255,255,255,0.5); }
+        .tab-btn.active { background: var(--surface); color: var(--accent); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Grids and Layout Structural components */
+        .grid-layout { display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; }
+        .dashboard-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+
+        @media (max-width: 900px) {
+            .grid-layout { grid-template-columns: 1fr; }
+        }
+
+        /* Material UI Cards */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+            border-left: 4px solid var(--primary);
+        }
+        .stat-card.accent { border-left-color: var(--accent); }
+        .stat-card.success { border-left-color: var(--success); }
+        .stat-card.warning { border-left-color: var(--warning); }
+        .stat-title { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); }
+        .stat-val { font-size: 1.35rem; font-weight: 700; color: var(--primary); margin-top: 0.25rem; }
+
+        /* Form Assemblies */
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.35rem; font-size: 0.85rem; font-weight: 600; color: #475569; }
+        input, select, textarea {
+            width: 100%; padding: 0.55rem; border: 1px solid var(--border);
+            border-radius: var(--radius); font-size: 0.9rem; background: #fff; color: var(--text);
+        }
+        input:focus, select:focus { outline: none; border-color: var(--accent); }
+
+        /* Button Triggers */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 0.55rem 1.1rem; border-radius: var(--radius); font-size: 0.9rem;
+            font-weight: 500; cursor: pointer; border: none; transition: background 0.15s;
+        }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-block { width: 100%; }
+        .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; border-radius: 4px; }
+
+        /* Data Displays */
+        table { width: 100%; border-collapse: collapse; margin-top: 0.25rem; font-size: 0.85rem; }
+        th, td { padding: 0.65rem 0.85rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background-color: #f8fafc; font-weight: 600; color: #475569; }
+        tr:hover { background-color: #f8fafc; }
+
+        /* Badges */
+        .badge {
+            display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px;
+            font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
+        }
+        .bg-operational { background: #dcfce7; color: #15803d; }
+        .bg-maintenance { background: #fef9c3; color: #a16207; }
+        .bg-disposed { background: #fee2e2; color: #991b1b; }
+        .bg-requested { background: #e2e8f0; color: #475569; }
+        .bg-ordered { background: #e0f2fe; color: #0369a1; }
+        .bg-received { background: #dcfce7; color: #166534; }
+        .bg-alert { background: #fee2e2; color: #b91c1c; font-weight: 700; animation: pulse 2s infinite; }
+
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div>
+            <h1>Corporate Inventory & Asset Core</h1>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">Fixed Capital Assets, Equipment Life-Cycles & Consumable Inventory</p>
+        </div>
+    </header>
+
+    <nav class="tabs">
+        <button class="tab-btn active" onclick="switchView('assets-tab')">🏢 Office Assets & Equipment</button>
+        <button class="tab-btn" onclick="switchView('stock-tab')">📦 Stationery & Consumable Stock</button>
+        <button class="tab-btn" onclick="switchView('procurement-tab')">🛒 Procurement & Purchase Orders</button>
+    </nav>
+
+    <!-- METRIC RUNWAY BOARD -->
+    <div class="dashboard-summary">
+        <div class="stat-card">
+            <span class="stat-title">Total Tracked Fixed Assets</span>
+            <span class="stat-val" id="countTotalAssets">0 Items</span>
+        </div>
+        <div class="stat-card accent">
+            <span class="stat-title">Equipment Under Maintenance</span>
+            <span class="stat-val" id="countMaintenance">0 Items</span>
+        </div>
+        <div class="stat-card success">
+            <span class="stat-title">Stationery SKU Lines</span>
+            <span class="stat-val" id="countStockSKUs">0 Lines</span>
+        </div>
+        <div class="stat-card warning" id="criticalStockCard">
+            <span class="stat-title">Critical Low Stock Alerts</span>
+            <span class="stat-val" id="countCriticalAlerts">0 SKUs</span>
+        </div>
+    </div>
+
+    <!-- 1. OFFICE ASSET & EQUIPMENT MODULE -->
+    <section id="assets-tab" class="tab-content active">
+        <div class="grid-layout">
+            <div class="card">
+                <h2>Register Capital Asset</h2>
+                <form id="assetForm" onsubmit="addAsset(event)">
+                    <div class="form-group">
+                        <label for="assetName">Asset Name / Model Description</label>
+                        <input type="text" id="assetName" required placeholder="ThinkPad L14 Gen 4, Heavy Duty Printer">
+                    </div>
+                    <div class="form-group">
+                        <label for="assetCategory">Classification Category</label>
+                        <select id="assetCategory" required>
+                            <option value="Office IT Infrastructure">Office IT Infrastructure</option>
+                            <option value="Facility Equipment & Machinery">Facility Equipment & Machinery</option>
+                            <option value="Corporate Furniture Fittings">Corporate Furniture Fittings</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="assetSerial">Serial / Tag Unique Code</label>
+                        <input type="text" id="assetSerial" required placeholder="TAG-2026-XYZ">
+                    </div>
+                    <div class="form-group">
+                        <label for="assetCustodian">Assigned Custodian Staff</label>
+                        <input type="text" id="assetCustodian" placeholder="Finance Dept, Unassigned">
+                    </div>
+                    <div class="form-group">
+                        <label for="assetStatus">Operational State Status</label>
+                        <select id="assetStatus" required>
+                            <option value="Operational">Operational</option>
+                            <option value="Maintenance">Maintenance / Calibration</option>
+                            <option value="Disposed">Disposed / Written Off</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Log Capital Asset</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Fixed Asset Master Registry</h2>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Asset Tag Code</th>
+                                <th>Item Description</th>
+                                <th>Category Group</th>
+                                <th>Assigned To</th>
+                                <th>Condition Status</th>
+                                <th>Life-Cycle Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="assetsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. STATIONERY & CONSUMABLE STOCK TRACKING -->
+    <section id="stock-tab" class="tab-content">
+        <div class="grid-layout">
+            <div class="card">
+                <h2>Manage Consumable Stock Lines</h2>
+                <form id="stockForm" onsubmit="updateStockLine(event)">
+                    <div class="form-group">
+                        <label for="stockSKU">Select Target SKU Consumable</label>
+                        <select id="stockSKU" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="stockAction">Inventory Operation Movement</label>
+                        <select id="stockAction" required>
+                            <option value="Issue">Issue Outward (Stock Consume)</option>
+                            <option value="Receive">Receive Inward (Stock Refill)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="stockQty">Adjustment Quantity</label>
+                        <input type="number" id="stockQty" min="1" required placeholder="0">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Commit Stock Adjustment</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Stationery & Central Store Ledger</h2>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Item Code / SKU</th>
+                                <th>Material Name Description</th>
+                                <th style="text-align: right;">Current Inventory Count</th>
+                                <th style="text-align: right;">Re-Order Safety Level</th>
+                                <th>Status Metric</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. PROCUREMENT & PURCHASE MANAGEMENT MODULE -->
+    <section id="procurement-tab" class="tab-content">
+        <div class="card">
+            <h2>Procurement Lifecycle Framework & Purchase Orders</h2>
+            <div style="text-align: right; margin-bottom: 1rem;">
+                <button class="btn btn-success" onclick="generateMockPO()">Initialize Emergency Supply Order</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>PO Reference</th>
+                            <th>Requested Inventory / Item Name</th>
+                            <th>Target Vendor</th>
+                            <th style="text-align: right;">Estimated Unit Total Cost</th>
+                            <th>Procurement Workflow Status</th>
+                            <th>Pipeline Control</th>
+                        </tr>
+                    </thead>
+                    <tbody id="procurementTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+    // Module Global Data Registers
+    let assets = [
+        { tag: "IT-8941", name: "MacBook Pro M3 Max 16\"", category: "Office IT Infrastructure", custodian: "Dev Lead (Alex)", status: "Operational" },
+        { tag: "EQ-3022", name: "Kyocera Multi-Function Copier Taskalfa", category: "Facility Equipment & Machinery", custodian: "Admin Pool Desk", status: "Maintenance" },
+        { tag: "FR-5011", name: "Ergonomic Mesh Task Chairs (Set of 6)", category: "Corporate Furniture Fittings", custodian: "Boardroom Suite B", status: "Operational" }
+    ];
+
+    let stationeryStore = [
+        { sku: "STAT-A4-P", name: "A4 Printing Paper reams (Chuka White)", currentQty: 45, reorderLevel: 15 },
+        { sku: "STAT-TON-05A", name: "HP LaserJet LaserJet Black Toner Cartridge 05A", currentQty: 2, reorderLevel: 5 },
+        { sku: "STAT-PEN-BLU", name: "Schneider Fine Ballpoint Blue Pens (Box of 50)", currentQty: 18, reorderLevel: 4 }
+    ];
+
+    let procurements = [
+        { poId: "PO-2026-001", item: "Replacement Laser Scanning Sensors for Kyocera Copier", vendor: "Epson Systems Africa Ltd", totalCost: 450.00, status: "Requested" },
+        { poId: "PO-2026-002", item: "Bulk Re-Up: HP Toner 05A & A4 Paper Bundles", vendor: "Central Stationers Ltd", totalCost: 1250.00, status: "Ordered" }
+    ];
+
+    window.addEventListener('DOMContentLoaded', () => {
+        refreshManagementViews();
+    });
+
+    function switchView(targetTabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(targetTabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    // Business Logic Handlers
+    function addAsset(e) {
+        e.preventDefault();
+        let newAsset = {
+            tag: document.getElementById('assetSerial').value,
+            name: document.getElementById('assetName').value,
+            category: document.getElementById('assetCategory').value,
+            custodian: document.getElementById('assetCustodian').value || "Unassigned Operations Pool",
+            status: document.getElementById('assetStatus').value
+        };
+
+        assets.push(newAsset);
+        document.getElementById('assetForm').reset();
+        refreshManagementViews();
+    }
+
+    function toggleAssetStatus(tag) {
+        let matchedItem = assets.find(a => a.tag === tag);
+        if (matchedItem) {
+            if (matchedItem.status === "Operational") matchedItem.status = "Maintenance";
+            else if (matchedItem.status === "Maintenance") matchedItem.status = "Operational";
+            refreshManagementViews();
+        }
+    }
+
+    function updateStockLine(e) {
+        e.preventDefault();
+        let selectedSku = document.getElementById('stockSKU').value;
+        let action = document.getElementById('stockAction').value;
+        let changeQty = parseInt(document.getElementById('stockQty').value);
+
+        let targetProduct = stationeryStore.find(s => s.sku === selectedSku);
+        if (!targetProduct) return;
+
+        if (action === "Issue") {
+            if (targetProduct.currentQty < changeQty) {
+                alert("Inventory Deficit: Allocation volume breaks current on-hand warehouse stores.");
+                return;
+            }
+            targetProduct.currentQty -= changeQty;
+        } else {
+            targetProduct.currentQty += changeQty;
+        }
+
+        document.getElementById('stockQty').value = "";
+        refreshManagementViews();
+    }
+
+    function transitionProcurement(poId, nextStatus) {
+        let matchPo = procurements.find(p => p.poId === poId);
+        if (matchPo) {
+            matchPo.status = nextStatus;
+            
+            // Auto-receive loop: inject payload to store if po fulfills completely
+            if (nextStatus === "Received" && poId === "PO-2026-002") {
+                let toner = stationeryStore.find(s => s.sku === "STAT-TON-05A");
+                if (toner) toner.currentQty += 15; // Log items directly received into store house balance
+                alert("Procurement finalized. Cargo unpacked: 15 Toners verified into Stationery Stores Ledger.");
+            }
+            refreshManagementViews();
+        }
+    }
+
+    function generateMockPO() {
+        let generatedId = "PO-2026-0" + Math.floor(10 + Math.random() * 89);
+        procurements.push({
+            poId: generatedId,
+            item: "Uninterruptible Power Supply (UPS) 1500VA Backup",
+            vendor: "Mombasa Computing Hardware Wholesalers",
+            totalCost: 320.00,
+            status: "Requested"
+        });
+        refreshManagementViews();
+    }
+
+    // Dashboard View Render Pipelines
+    function refreshManagementViews() {
+        // Run aggregation calculations
+        let totalCount = assets.length;
+        let maintenanceCount = assets.filter(a => a.status === "Maintenance").length;
+        let skusCount = stationeryStore.length;
+        let lowStockAlerts = stationeryStore.filter(s => s.currentQty <= s.reorderLevel).length;
+
+        document.getElementById('countTotalAssets').innerText = totalCount + " Units";
+        document.getElementById('countMaintenance').innerText = maintenanceCount + " Units";
+        document.getElementById('countStockSKUs').innerText = skusCount + " Lines";
+        document.getElementById('countCriticalAlerts').innerText = lowStockAlerts + " Alerts";
+        
+        let alertContainerCard = document.getElementById('criticalStockCard');
+        if (lowStockAlerts > 0) alertContainerCard.style.borderLeftColor = "var(--danger)";
+        else alertContainerCard.style.borderLeftColor = "var(--warning)";
+
+        renderAssetsGrid();
+        renderStockGrid();
+        renderProcurementGrid();
+        rebuildDropdownElements();
+    }
+
+    function renderAssetsGrid() {
+        let body = document.getElementById('assetsTableBody');
+        body.innerHTML = "";
+        assets.forEach(a => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><code>${a.tag}</code></td>
+                <td><strong>${a.name}</strong></td>
+                <td><span style="color:var(--text-muted); font-size:0.8rem;">${a.category}</span></td>
+                <td>${a.custodian}</td>
+                <td><span class="badge bg-${a.status.toLowerCase()}">${a.status}</span></td>
+                <td>
+                    ${a.status !== 'Disposed' ? `
+                        <button class="btn btn-secondary btn-sm" onclick="toggleAssetStatus('${a.tag}')">
+                            ${a.status === 'Operational' ? 'Flag Maintenance' : 'Clear Return'}
+                        </button>
+                    ` : `<span style="color:var(--text-muted)">Archived</span>`}
+                </td>
+            `;
+            body.appendChild(tr);
+        });
+    }
+
+    function renderStockGrid() {
+        let body = document.getElementById('stockTableBody');
+        body.innerHTML = "";
+        stationeryStore.forEach(s => {
+            let isLow = s.currentQty <= s.reorderLevel;
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><code>${s.sku}</code></td>
+                <td><strong>${s.name}</strong></td>
+                <td style="text-align: right; font-weight: 700; ${isLow ? 'color:var(--danger);' : ''}">${s.currentQty}</td>
+                <td style="text-align: right; color:var(--text-muted);">${s.reorderLevel}</td>
+                <td>
+                    ${isLow ? `<span class="badge bg-alert">Low Stock Alert</span>` : `<span class="badge bg-operational">Healthy Supply</span>`}
+                </td>
+            `;
+            body.appendChild(tr);
+        });
+    }
+
+    function renderProcurementGrid() {
+        let body = document.getElementById('procurementTableBody');
+        body.innerHTML = "";
+        procurements.forEach(p => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><code>${p.poId}</code></td>
+                <td><strong>${p.item}</strong></td>
+                <td>${p.vendor}</td>
+                <td style="text-align: right; font-weight:600;">$${p.totalCost.toFixed(2)}</td>
+                <td><span class="badge bg-${p.status.toLowerCase()}">${p.status}</span></td>
+                <td>
+                    ${p.status === 'Requested' ? `
+                        <button class="btn btn-primary btn-sm" onclick="transitionProcurement('${p.poId}', 'Ordered')">Dispatch PO</button>
+                    ` : p.status === 'Ordered' ? `
+                        <button class="btn btn-success btn-sm" onclick="transitionProcurement('${p.poId}', 'Received')">Accept Delivery</button>
+                    ` : `<span style="color:var(--success); font-weight:600;">Inventory Integrated</span>`}
+                </td>
+            `;
+            body.appendChild(tr);
+        });
+    }
+
+    function rebuildDropdownElements() {
+        let selectField = document.getElementById('stockSKU');
+        let cacheValue = selectField.value;
+        selectField.innerHTML = stationeryStore.map(s => `<option value="${s.sku}">${s.name} [On Hand: ${s.currentQty}]</option>`).join('');
+        if (cacheValue) selectField.value = cacheValue;
+    }
+</script>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+</body>
+</html>

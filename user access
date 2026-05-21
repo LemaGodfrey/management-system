@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Identity Matrix & Access Control Panel</title>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text: #334155;
+            --text-muted: #64748b;
+            --radius: 8px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        body { background-color: var(--background); color: var(--text); padding: 2rem; line-height: 1.5; }
+        .container { max-width: 1500px; margin: 0 auto; }
+
+        header {
+            margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        h1 { font-size: 1.5rem; color: var(--primary); }
+        h2 { font-size: 1.1rem; color: var(--primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        p.subtitle { color: var(--text-muted); font-size: 0.85rem; margin-top: 0.15rem; }
+
+        /* Navigation Matrix Tabs */
+        .tabs { display: flex; gap: 0.4rem; margin-bottom: 1.5rem; background: #e2e8f0; padding: 0.35rem; border-radius: var(--radius); }
+        .tab-btn {
+            background: none; border: none; padding: 0.75rem 1rem; font-size: 0.88rem; font-weight: 600;
+            color: #475569; cursor: pointer; flex: 1; border-radius: calc(var(--radius) - 3px);
+            transition: all 0.15s ease; text-align: center;
+        }
+        .tab-btn:hover { background: rgba(255,255,255,0.4); }
+        .tab-btn.active { background: var(--surface); color: var(--accent); box-shadow: 0 2px 4px rgba(0,0,0,0.06); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Structural Layout Grid System */
+        .grid-split { display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; align-items: start; }
+        @media (max-width: 1024px) { .grid-split { grid-template-columns: 1fr; } }
+        
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.01); }
+
+        /* Forms & Inputs */
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.4rem; font-size: 0.8rem; font-weight: 700; color: #475569; text-transform: uppercase; }
+        input, select { width: 100%; padding: 0.6rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.9rem; color: var(--text); background: #fff; }
+        input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); }
+
+        /* Functional Button System */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+            padding: 0.6rem 1.2rem; border-radius: var(--radius); font-size: 0.88rem; font-weight: 600;
+            cursor: pointer; border: none; transition: all 0.1s;
+        }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-outline:hover { background: #f8fafc; border-color: #cbd5e1; }
+        .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.78rem; }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 0.5rem; }
+        th, td { padding: 0.75rem 0.9rem; border-bottom: 1px solid #e2e8f0; text-align: left; }
+        th { background-color: #f8fafc; font-weight: 600; color: #475569; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.5px; }
+        tr:hover { background-color: #f8fafc; }
+
+        /* Status & Role Badges */
+        .badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+        .role-admin { background: #fee2e2; color: #991b1b; }
+        .role-board { background: #fef3c7; color: #92400e; }
+        .role-staff { background: #e0e7ff; color: #3730a3; }
+        .role-auditor { background: #dcfce7; color: #166534; }
+        
+        .status-active { background: #dcfce7; color: #166534; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-revoked { background: #fee2e2; color: #991b1b; }
+
+        /* Matrix Permission Grid */
+        .perm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem; margin-top: 0.5rem; }
+        .perm-item { display: flex; align-items: center; gap: 0.5rem; background: #f1f5f9; padding: 0.5rem; border-radius: 6px; font-size: 0.8rem; font-weight: 500; }
+        .perm-item input { width: auto; cursor: pointer; }
+
+        /* Flow Logs Timeline */
+        .log-terminal { background: #0f172a; color: #38bdf8; padding: 1rem; border-radius: var(--radius); font-family: monospace; font-size: 0.8rem; overflow-y: auto; max-height: 400px; border: 1px solid #334155; }
+        .log-line { margin-bottom: 0.4rem; display: flex; gap: 1rem; }
+        .log-time { color: #64748b; flex-shrink: 0; }
+        .log-warn { color: #fbbf24; }
+        .log-danger { color: #f87171; }
+        .log-success { color: #34d399; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div>
+            <h1>Identity Matrix & Access Control Vault</h1>
+            <p class="subtitle">RBAC Engine, Staff Permission Tokens, Multi-Signatory Board Approvals, and Auditor Trace-Logs</p>
+        </div>
+        <div>
+            <label style="display:inline-block; font-size:0.75rem; margin-right:0.5rem;">Active Identity Switcher:</label>
+            <select id="currentUserSession" style="width: auto; display: inline-block; padding: 0.35rem;" onchange="onSessionUserChange()">
+                <option value="Admin Console">Admin: Sarah Jenkins (SecOps)</option>
+                <option value="Board Director">Board Member: Director Raymond Vance</option>
+                <option value="Compliance Auditor">External Auditor: Marcus Finch, CPA</option>
+                <option value="Loan Officer">Staff: Elena Rostova (Credit Desk)</option>
+            </select>
+        </div>
+    </header>
+
+    <nav class="tabs">
+        <button class="tab-btn active" onclick="switchTab('tab-staff')">👥 Staff Directory & Permissions</button>
+        <button class="tab-btn" onclick="switchTab('tab-approvals')">⚖️ Board Signatory Clearance (Dual-Control)</button>
+        <button class="tab-btn" onclick="switchTab('tab-audit-logs')">🛡️ Immutable Security Audit Trail</button>
+    </nav>
+
+    <!-- TAB 1: STAFF DIRECTORY & DYNAMIC PERMISSIONS OVERRIDE -->
+    <section id="tab-staff" class="tab-content active">
+        <div class="grid-split">
+            <div class="card">
+                <h2>Provision New Identity</h2>
+                <form id="identityForm" onsubmit="provisionUser(event)">
+                    <div class="form-group">
+                        <label for="newUserName">Full Legal Name</label>
+                        <input type="text" id="newUserName" placeholder="e.g., Jonathan Vance" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newUserEmail">System Identity Email</label>
+                        <input type="email" id="newUserEmail" placeholder="j.vance@enterprise.io" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newUserRole">Base Security Architecture Role</label>
+                        <select id="newUserRole" onchange="adjustDefaultPermissions()">
+                            <option value="Staff Desk">Staff Member (Operational)</option>
+                            <option value="Board Director">Board Director (Governance)</option>
+                            <option value="System Admin">System Security Administrator</option>
+                            <option value="Compliance Auditor">External Compliance Auditor</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Assigned Permission Sub-Tokens</label>
+                        <div class="perm-grid">
+                            <div class="perm-item"><input type="checkbox" id="p_read" checked disabled> <span>Read Ledger</span></div>
+                            <div class="perm-item"><input type="checkbox" id="p_write" checked> <span>Write Records</span></div>
+                            <div class="perm-item"><input type="checkbox" id="p_export"> <span>Bulk Data Export</span></div>
+                            <div class="perm-item"><input type="checkbox" id="p_override"> <span>Limit Overrides</span></div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">⚡ Commit Token to Directory</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Active Security Group Matrix</h2>
+                <p class="subtitle" style="margin-bottom: 1rem;">Directly toggle operational scopes or revoke profile credentials instantly.</p>
+                <div style="overflow-x: auto;">
+                    <table id="staffTable">
+                        <thead>
+                            <tr>
+                                <th>Operator Profile</th>
+                                <th>Core Role Classification</th>
+                                <th>Assigned Privileges</th>
+                                <th>Credential Status</th>
+                                <th style="text-align: right;">Administrative Control</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr id="row-usr-001">
+                                <td><strong>Elena Rostova</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">e.rostova@vault.internal</span></td>
+                                <td><span class="badge role-staff">Staff Desk</span></td>
+                                <td><code>Read</code>, <code>Write</code></td>
+                                <td><span class="badge status-active" id="stat-usr-001">Active</span></td>
+                                <td style="text-align: right;">
+                                    <button class="btn btn-outline btn-sm" onclick="toggleUserStatus('usr-001', 'Elena Rostova')">Suspend</button>
+                                </td>
+                            </tr>
+                            <tr id="row-usr-002">
+                                <td><strong>Director Raymond Vance</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">r.vance@governance.board</span></td>
+                                <td><span class="badge role-board">Board Director</span></td>
+                                <td><code>Read</code>, <code>Signatory Approval</code></td>
+                                <td><span class="badge status-active" id="stat-usr-002">Active</span></td>
+                                <td style="text-align: right;">
+                                    <button class="btn btn-outline btn-sm" onclick="toggleUserStatus('usr-002', 'Director Raymond Vance')">Suspend</button>
+                                </td>
+                            </tr>
+                            <tr id="row-usr-003">
+                                <td><strong>Marcus Finch, CPA</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">m.finch@audit-regulatory.gov</span></td>
+                                <td><span class="badge role-auditor">Compliance Auditor</span></td>
+                                <td><code>Read Logs</code>, <code>Export Trail</code></td>
+                                <td><span class="badge status-active" id="stat-usr-003">Active</span></td>
+                                <td style="text-align: right;">
+                                    <button class="btn btn-outline btn-sm" onclick="toggleUserStatus('usr-003', 'Marcus Finch')">Suspend</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TAB 2: BOARD-LEVEL APPROVALS & DUAL-CONTROL OVERRIDE PIPELINE -->
+    <section id="tab-approvals" class="tab-content">
+        <div class="card">
+            <h2>Dual-Control Authorization Queue (M-of-N Mandate)</h2>
+            <p class="subtitle" style="margin-bottom: 1.5rem;">High-risk mutations require explicit dual-signature confirmation by designated Board members before deployment.</p>
+            
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Transaction Context Descriptor</th>
+                            <th>Risk Horizon</th>
+                            <th>Originating Officer</th>
+                            <th>Current Multi-Sign Status</th>
+                            <th style="text-align: right;">Security Action Signature</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="row-tx-1092">
+                            <td>
+                                <strong>Capital Reserve Ceiling Expansion</strong><br>
+                                <span style="font-size:0.75rem; color:var(--text-muted);">Request to elevate risk framework allocation to $750,000.00</span>
+                            </td>
+                            <td><span class="badge role-admin">Critical Tier 1</span></td>
+                            <td>Sarah Jenkins (SecOps)</td>
+                            <td><span class="badge status-pending" id="sign-tx-1092">0 / 2 Signatures</span></td>
+                            <td style="text-align: right;" id="act-tx-1092">
+                                <button class="btn btn-success btn-sm" onclick="signTransaction('tx-1092', 'Capital Reserve Expansion')">✍️ Sign Release</button>
+                                <button class="btn btn-danger btn-sm" onclick="rejectTransaction('tx-1092', 'Capital Reserve Expansion')">Veto</button>
+                            </td>
+                        </tr>
+                        <tr id="row-tx-1093">
+                            <td>
+                                <strong>Write-off Impaired Non-Performing Loan Asset File #99102</strong><br>
+                                <span style="font-size:0.75rem; color:var(--text-muted);">Balancing allocation clean out of Stage 3 defaults ($22,700.00)</span>
+                            </td>
+                            <td><span class="badge role-board">High Tier 2</span></td>
+                            <td>Elena Rostova (Credit Desk)</td>
+                            <td><span class="badge status-active">Approved & Executed</span></td>
+                            <td style="text-align: right; font-weight: 600; color: var(--success); font-size: 0.8rem;">
+                                Immutable Signed
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- TAB 3: IMMUTABLE AUDIT TRAIL LOGGING -->
+    <section id="tab-audit-logs" class="tab-content">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div>
+                    <h2>Cryptographically Anchored Access Log</h2>
+                    <p class="subtitle">System events, login tokens, configuration modifications, and session checks</p>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="clearLocalDisplayLogs()">Clear Console Window View</button>
+            </div>
+            <div class="log-terminal" id="terminalLog">
+                <!-- Javascript fills logs natively -->
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+    // Live Directory Registry Arrays
+    let signatureTracking = {
+        'tx-1092': { count: 0, signers: [] }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+        injectLog("SYS-BOOT", "Admin Console", "Identity Core Engine initialized successfully. Cryptographic salts matched.", "success");
+        injectLog("AUTH-SEC", "System Automaton", "Enforced Basel III segregation protocols across all active sessions.", "normal");
+        injectLog("AUDIT-RUN", "Compliance Auditor", "Synchronized live tracking ledger with remote regulatory vault.", "normal");
+    });
+
+    function switchTab(targetId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(targetId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    // Role Matrix Default Preset Automation
+    function adjustDefaultPermissions() {
+        const selectedRole = document.getElementById('newUserRole').value;
+        const writeBox = document.getElementById('p_write');
+        const exportBox = document.getElementById('p_export');
+        const overrideBox = document.getElementById('p_override');
+
+        if (selectedRole === "Staff Desk") {
+            writeBox.checked = true; exportBox.checked = false; overrideBox.checked = false;
+        } else if (selectedRole === "Board Director") {
+            writeBox.checked = false; exportBox.checked = true; overrideBox.checked = false;
+        } else if (selectedRole === "System Admin") {
+            writeBox.checked = true; exportBox.checked = true; overrideBox.checked = true;
+        } else if (selectedRole === "Compliance Auditor") {
+            writeBox.checked = false; exportBox.checked = true; overrideBox.checked = false;
+        }
+    }
+
+    // Provision New Identity Pipeline Execution
+    function provisionUser(event) {
+        event.preventDefault();
+        const name = document.getElementById('newUserName').value;
+        const email = document.getElementById('newUserEmail').value;
+        const role = document.getElementById('newUserRole').value;
+        const activeActor = document.getElementById('currentUserSession').value;
+
+        // Security check: Only Admins can commit structural profiles
+        if (activeActor !== "Admin Console") {
+            alert(`🚨 Access Denied: Profile [${activeActor}] lacks SEC_IDENTITY_PROVISION tokens.`);
+            injectLog("SEC-VIOLATION", activeActor, `Unauthorized attempt to provision user profile [${name}]. Actions flagged.`, "danger");
+            return;
+        }
+
+        const uniqueId = "usr-" + Math.floor(100 + Math.random() * 900);
+        let badgeClass = "role-staff";
+        if (role.includes("Admin")) badgeClass = "role-admin";
+        if (role.includes("Board")) badgeClass = "role-board";
+        if (role.includes("Auditor")) badgeClass = "role-auditor";
+
+        // Aggregate explicit checking tokens
+        let privileges = ["Read"];
+        if (document.getElementById('p_write').checked) privileges.push("Write");
+        if (document.getElementById('p_export').checked) privileges.push("Export");
+        if (document.getElementById('p_override').checked) privileges.push("Override");
+
+        const tableBody = document.querySelector('#staffTable tbody');
+        const newRow = document.createElement('tr');
+        newRow.id = `row-${uniqueId}`;
+        newRow.innerHTML = `
+            <td><strong>${name}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">${email}</span></td>
+            <td><span class="badge ${badgeClass}">${role}</span></td>
+            <td><code>${privileges.join(', ')}</code></td>
+            <td><span class="badge status-active" id="stat-${uniqueId}">Active</span></td>
+            <td style="text-align: right;">
+                <button class="btn btn-outline btn-sm" onclick="toggleUserStatus('${uniqueId}', '${name}')">Suspend</button>
+            </td>
+        `;
+
+        tableBody.appendChild(newRow);
+        injectLog("USER-PROVISION", activeActor, `Successfully generated identity token ${uniqueId} for ${name} (${role}).`, "success");
+        document.getElementById('identityForm').reset();
+        adjustDefaultPermissions();
+    }
+
+    // Toggle Suspension Operational State
+    function toggleUserStatus(userId, name) {
+        const activeActor = document.getElementById('currentUserSession').value;
+        if (activeActor !== "Admin Console") {
+            alert(`🚨 Access Denied: Profile [${activeActor}] lacks global infrastructure SUSPEND_OPERATOR access.`);
+            injectLog("SEC-VIOLATION", activeActor, `Attempted suspension command on ${name}. Denied.`, "danger");
+            return;
+        }
+
+        const badge = document.getElementById(`stat-${userId}`);
+        if (badge.innerText === "ACTIVE") {
+            badge.innerText = "Suspended";
+            badge.className = "badge status-revoked";
+            injectLog("USER-SUSPEND", activeActor, `Revoked functional directory access for account ${userId} (${name}).`, "warn");
+        } else {
+            badge.innerText = "Active";
+            badge.className = "badge status-active";
+            injectLog("USER-REACTIVATE", activeActor, `Re-authorized directory tokens for account ${userId} (${name}).`, "success");
+        }
+    }
+
+    // Dual-Control Authorization Signatures Flow Execution
+    function signTransaction(txId, description) {
+        const activeActor = document.getElementById('currentUserSession').value;
+        
+        // Governance Rule enforcement check
+        if (activeActor !== "Board Director") {
+            alert(`🚨 Authorization Halting: Dual-Control items require a direct [Board Director] cryptographic key signature. Current identity: [${activeActor}].`);
+            injectLog("SIG-FAIL", activeActor, `Refused approval signature on ${txId}: Profile is outside authorized structural pool.`, "warn");
+            return;
+        }
+
+        let tx = signatureTracking[txId];
+        if (tx.signers.includes(activeActor)) {
+            alert("🔒 Redundant Entry: You have already assigned your structural certificate signature to this transaction item.");
+            return;
+        }
+
+        tx.count++;
+        tx.signers.push(activeActor);
+        
+        const statusBadge = document.getElementById(`sign-${txId}`);
+        statusBadge.innerText = `${tx.count} / 2 Signatures`;
+        statusBadge.className = "badge status-pending";
+
+        injectLog("SIG-COMMIT", activeActor, `Affixed signature token confirmation to transaction tracking index ${txId} (${description}).`, "normal");
+
+        if (tx.count >= 2) {
+            statusBadge.innerText = "Approved & Executed";
+            statusBadge.className = "badge status-active";
+            document.getElementById(`act-tx-1092`).innerHTML = `<span style="font-weight: 600; color: var(--success); font-size: 0.8rem;">Immutable Signed</span>`;
+            injectLog("ORCHESTRATION-RELEASE", "System Core Engine", `Execution threshold verified. Committed transaction payload ${txId} to production branch.`, "success");
+        }
+    }
+
+    function rejectTransaction(txId, description) {
+        const activeActor = document.getElementById('currentUserSession').value;
+        if (activeActor !== "Board Director") {
+            alert("🚨 Access Denied: Veto power limited strictly to Board level directory accounts.");
+            return;
+        }
+
+        document.getElementById(`sign-${txId}`).innerText = "Vetoed / Cancelled";
+        document.getElementById(`sign-${txId}`).className = "badge status-revoked";
+        document.getElementById(`act-tx-1092`).innerHTML = `<span style="font-weight: 600; color: var(--danger); font-size: 0.8rem;">Veto Terminated</span>`;
+        injectLog("TX-VETO", activeActor, `Exercised board-level veto right to completely strike out application ${txId} (${description}).`, "danger");
+    }
+
+    function onSessionUserChange() {
+        const targetActor = document.getElementById('currentUserSession').value;
+        injectLog("SESSION-SWAP", "System Core", `Swapped active security console frame context over to: [${targetActor}].`, "normal");
+    }
+
+    // Appending Engine into Simulated Cryptographic Terminal Logs
+    function injectLog(eventCode, operator, message, styleClass) {
+        const terminal = document.getElementById('terminalLog');
+        const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        
+        let colorClass = "";
+        if (styleClass === "warn") colorClass = "log-warn";
+        if (styleClass === "danger") colorClass = "log-danger";
+        if (styleClass === "success") colorClass = "log-success";
+
+        const logNode = document.createElement('div');
+        logNode.className = "log-line";
+        logNode.innerHTML = `
+            <span class="log-time">[${timestamp}]</span>
+            <span class="${colorClass}" style="font-weight:700; min-width:130px; display:inline-block;">[${eventCode}]</span>
+            <span style="color:#f8fafc; font-weight:500; min-width:150px; display:inline-block;">Op: ${operator}</span>
+            <span style="color:#94a3b8;">— ${message}</span>
+        `;
+        terminal.appendChild(logNode);
+        terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    function clearLocalDisplayLogs() {
+        document.getElementById('terminalLog').innerHTML = `<div class="log-line"><span class="log-time">Console display purged. Log history remains preserved in background immutable ledger blocks.</span></div>`;
+    }
+</script>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+</body>
+</html>

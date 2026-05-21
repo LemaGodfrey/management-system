@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Management Module</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --success: #059669;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --bg: #f3f4f6;
+            --card: #ffffff;
+            --border: #e5e7eb;
+            --text: #111827;
+            --text-light: #6b7280;
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 1.5rem; }
+
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { margin-bottom: 2rem; border-bottom: 2px solid var(--border); padding-bottom: 1rem; }
+
+        /* Navigation */
+        .tabs { display: flex; gap: 10px; margin-bottom: 2rem; overflow-x: auto; padding-bottom: 5px; }
+        .tab-btn {
+            background: #fff; border: 1px solid var(--border); padding: 10px 20px;
+            border-radius: var(--radius); cursor: pointer; white-space: nowrap; font-weight: 500;
+            transition: 0.2s; color: var(--text-light);
+        }
+        .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .view { display: none; }
+        .view.active { display: block; }
+
+        /* Grid & Cards */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem; }
+        .card { background: var(--card); padding: 1.5rem; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1.5rem; }
+        
+        /* Forms */
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--text); }
+        input, select { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        th { background: #f9fafb; color: var(--text-light); font-weight: 600; }
+        
+        .badge { padding: 4px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+        .status-applied { background: #dbeafe; color: #1e40af; }
+        .status-approved { background: #d1fae5; color: #065f46; }
+        .status-disbursed { background: #fef3c7; color: #92400e; }
+        
+        .summary-box { display: flex; justify-content: space-between; background: #f8fafc; padding: 1rem; border-radius: 8px; margin-top: 1rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Loan Operations Center</h1>
+        <p style="color: var(--text-light);">Process applications, manage guarantors, and track recoveries.</p>
+    </header>
+
+    <nav class="tabs">
+        <button class="tab-btn active" onclick="showTab('apply')">New Application</button>
+        <button class="tab-btn" onclick="showTab('workflow')">Approval Workflow</button>
+        <button class="tab-btn" onclick="showTab('disbursement')">Disbursement</button>
+        <button class="tab-btn" onclick="showTab('tracking')">Recovery & Tracking</button>
+    </nav>
+
+    <!-- 1. LOAN APPLICATION & GUARANTORS -->
+    <section id="apply" class="view active">
+        <div class="grid">
+            <div class="card">
+                <h2>Loan Application</h2>
+                <form id="loanForm" onsubmit="handleApplication(event)">
+                    <div class="form-group">
+                        <label>Member Name</label>
+                        <select id="appMember" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Loan Principal ($)</label>
+                        <input type="number" id="appAmount" placeholder="e.g. 5000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Interest Rate (% Per Year)</label>
+                        <input type="number" id="appRate" value="12" step="0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Repayment Period (Months)</label>
+                        <input type="number" id="appPeriod" value="12" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Select Guarantor</label>
+                        <select id="appGuarantor" required></select>
+                        <small style="color: var(--text-light)">Guarantor must be a verified member.</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Submit Application</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Repayment Preview</h2>
+                <div id="calcPreview">
+                    <p style="color: var(--text-light);">Enter details to see projection...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. WORKFLOW & APPROVAL -->
+    <section id="workflow" class="view">
+        <div class="card">
+            <h2>Workflow Queue</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Applicant</th>
+                        <th>Guarantor</th>
+                        <th>Principal</th>
+                        <th>Total Interest</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="workflowTable"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 3. DISBURSEMENT -->
+    <section id="disbursement" class="view">
+        <div class="card">
+            <h2>Ready for Disbursement</h2>
+            <p style="margin-bottom: 1rem; color: var(--text-light);">Approved loans awaiting fund transfer.</p>
+            <div id="disburseList"></div>
+        </div>
+    </section>
+
+    <!-- 4. RECOVERY & REPAYMENT SCHEDULES -->
+    <section id="tracking" class="view">
+        <div class="card">
+            <h2>Active Loans & Recovery Tracking</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Member</th>
+                        <th>Loan Type</th>
+                        <th>Next Installment</th>
+                        <th>Balance Owed</th>
+                        <th>Overdue Penalty</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="recoveryTable"></tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<!-- Simple Modal for Schedule -->
+<div id="scheduleModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:100; overflow-y:auto;">
+    <div class="card" style="max-width: 700px; margin: 50px auto; background: white;">
+        <div style="display:flex; justify-content: space-between;">
+            <h2>Repayment Schedule</h2>
+            <button class="btn btn-outline" onclick="closeModal()">Close</button>
+        </div>
+        <div id="scheduleContent"></div>
+    </div>
+</div>
+
+<script>
+    // --- Mock Data Store ---
+    const members = [
+        { id: "M01", name: "Sarah Johnson", status: "Active" },
+        { id: "M02", name: "James Mwangi", status: "Active" },
+        { id: "M03", name: "Elena Rodriguez", status: "Active" }
+    ];
+
+    let loans = [
+        { 
+            id: "LN-5521", 
+            memberId: "M01", 
+            guarantorId: "M03", 
+            principal: 2000, 
+            rate: 10, 
+            months: 6, 
+            status: "Approved",
+            date: "2026-05-10" 
+        }
+    ];
+
+    // --- Core Logic ---
+    function showTab(tabId) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.target.classList.add('active');
+        render();
+    }
+
+    function calculateLoan(principal, rate, months) {
+        const monthlyRate = (rate / 100) / 12;
+        // Amortization Formula: P [ i(1 + i)^n ] / [ (1 + i)^n – 1]
+        const emi = (principal * monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
+        const totalPayable = emi * months;
+        const totalInterest = totalPayable - principal;
+        return { emi, totalInterest, totalPayable };
+    }
+
+    // --- Event Handlers ---
+    function handleApplication(e) {
+        e.preventDefault();
+        const newLoan = {
+            id: "LN-" + Math.floor(1000 + Math.random() * 9000),
+            memberId: document.getElementById('appMember').value,
+            guarantorId: document.getElementById('appGuarantor').value,
+            principal: parseFloat(document.getElementById('appAmount').value),
+            rate: parseFloat(document.getElementById('appRate').value),
+            months: parseInt(document.getElementById('appPeriod').value),
+            status: "Applied",
+            date: new Date().toISOString().split('T')[0]
+        };
+        loans.push(newLoan);
+        alert("Application submitted for approval.");
+        e.target.reset();
+        render();
+    }
+
+    function updateStatus(loanId, newStatus) {
+        const loan = loans.find(l => l.id === loanId);
+        if (loan) loan.status = newStatus;
+        render();
+    }
+
+    // --- Render Functions ---
+    function render() {
+        populateDropdowns();
+        renderWorkflow();
+        renderDisbursements();
+        renderRecovery();
+        updatePreview();
+    }
+
+    function populateDropdowns() {
+        const mSelect = document.getElementById('appMember');
+        const gSelect = document.getElementById('appGuarantor');
+        const html = members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+        mSelect.innerHTML = html;
+        gSelect.innerHTML = html;
+    }
+
+    function renderWorkflow() {
+        const table = document.getElementById('workflowTable');
+        table.innerHTML = loans.filter(l => l.status === "Applied" || l.status === "Approved").map(l => {
+            const member = members.find(m => m.id === l.memberId);
+            const guarantor = members.find(m => m.id === l.guarantorId);
+            const calc = calculateLoan(l.principal, l.rate, l.months);
+            return `
+                <tr>
+                    <td><code>${l.id}</code></td>
+                    <td>${member.name}</td>
+                    <td>${guarantor.name}</td>
+                    <td>$${l.principal.toLocaleString()}</td>
+                    <td>$${calc.totalInterest.toFixed(2)}</td>
+                    <td><span class="badge status-${l.status.toLowerCase()}">${l.status}</span></td>
+                    <td>
+                        ${l.status === 'Applied' ? `<button class="btn btn-success btn-sm" onclick="updateStatus('${l.id}', 'Approved')">Approve</button>` : 'Awaiting Fund Release'}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderDisbursements() {
+        const container = document.getElementById('disburseList');
+        const approved = loans.filter(l => l.status === "Approved");
+        if(approved.length === 0) { container.innerHTML = "<p>No loans pending fund release.</p>"; return; }
+        
+        container.innerHTML = approved.map(l => {
+            const member = members.find(m => m.id === l.memberId);
+            return `
+                <div class="summary-box">
+                    <div>
+                        <strong>${member.name}</strong><br>
+                        <small>Amount to Disburse: $${l.principal.toLocaleString()}</small>
+                    </div>
+                    <button class="btn btn-primary" onclick="updateStatus('${l.id}', 'Disbursed')">Confirm Disbursement</button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderRecovery() {
+        const table = document.getElementById('recoveryTable');
+        const active = loans.filter(l => l.status === "Disbursed");
+        table.innerHTML = active.map(l => {
+            const member = members.find(m => m.id === l.memberId);
+            const calc = calculateLoan(l.principal, l.rate, l.months);
+            return `
+                <tr>
+                    <td>${member.name}</td>
+                    <td>Personal Loan</td>
+                    <td>$${calc.emi.toFixed(2)}</td>
+                    <td>$${calc.totalPayable.toFixed(2)}</td>
+                    <td><span style="color:var(--danger)">$0.00</span></td>
+                    <td><button class="btn btn-outline btn-sm" onclick="showSchedule('${l.id}')">View Schedule</button></td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function showSchedule(loanId) {
+        const l = loans.find(loan => loan.id === loanId);
+        const calc = calculateLoan(l.principal, l.rate, l.months);
+        let html = `<table><thead><tr><th>Month</th><th>Payment</th><th>Principal</th><th>Interest</th><th>Balance</th></tr></thead><tbody>`;
+        
+        let balance = calc.totalPayable;
+        for(let i = 1; i <= l.months; i++) {
+            const interestPortion = (balance * (l.rate/100/12));
+            const principalPortion = calc.emi - interestPortion;
+            balance -= calc.emi;
+            html += `<tr><td>${i}</td><td>$${calc.emi.toFixed(2)}</td><td>$${principalPortion.toFixed(2)}</td><td>$${interestPortion.toFixed(2)}</td><td>$${Math.max(0, balance).toFixed(2)}</td></tr>`;
+        }
+        html += "</tbody></table>";
+        document.getElementById('scheduleContent').innerHTML = html;
+        document.getElementById('scheduleModal').style.display = "block";
+    }
+
+    function closeModal() { document.getElementById('scheduleModal').style.display = "none"; }
+
+    function updatePreview() {
+        const p = parseFloat(document.getElementById('appAmount').value) || 0;
+        const r = parseFloat(document.getElementById('appRate').value) || 0;
+        const m = parseInt(document.getElementById('appPeriod').value) || 0;
+        if(p > 0 && r > 0 && m > 0) {
+            const c = calculateLoan(p, r, m);
+            document.getElementById('calcPreview').innerHTML = `
+                <div class="summary-box"><span>Monthly EMI:</span> <strong>$${c.emi.toFixed(2)}</strong></div>
+                <div class="summary-box"><span>Total Interest:</span> <strong>$${c.totalInterest.toFixed(2)}</strong></div>
+                <div class="summary-box"><span>Total Payback:</span> <strong>$${c.totalPayable.toFixed(2)}</strong></div>
+            `;
+        }
+    }
+
+    // Auto-update preview on typing
+    document.getElementById('loanForm').addEventListener('input', updatePreview);
+    
+    // Initial Load
+    render();
+</script>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+</body>
+</html>

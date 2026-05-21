@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Multi-Channel Communication Engine</title>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --success: #16a34a;
+            --warning: #ca8a04;
+            --danger: #dc2626;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text: #334155;
+            --text-muted: #64748b;
+            --radius: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            padding: 2rem;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 { font-size: 1.6rem; color: var(--primary); }
+        h2 { font-size: 1.15rem; margin-bottom: 1.25rem; color: var(--primary); }
+        p.subtitle { color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem; }
+
+        /* Module Tab Engine Navigation */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            background: #cbd5e1;
+            padding: 0.35rem;
+            border-radius: var(--radius);
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+            flex: 1;
+            border-radius: calc(var(--radius) - 3px);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .tab-btn:hover { background: rgba(255,255,255,0.4); }
+        .tab-btn.active { background: var(--surface); color: var(--accent); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Dynamic Metrics Runway Layout */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            border-top: 4px solid var(--accent);
+        }
+        .metric-card.sms { border-top-color: #06b6d4; }
+        .metric-card.email { border-top-color: #a855f7; }
+        .metric-card.app { border-top-color: #f97316; }
+        
+        .metric-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); }
+        .metric-value { font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-top: 0.25rem; }
+
+        /* Work Layout Splits */
+        .module-layout { display: grid; grid-template-columns: 1fr 1.5fr; gap: 1.5rem; }
+        @media (max-width: 950px) { .module-layout { grid-template-columns: 1fr; } }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Form Subsystems */
+        .form-group { margin-bottom: 1.25rem; }
+        label { display: block; margin-bottom: 0.4rem; font-size: 0.85rem; font-weight: 600; color: #475569; }
+        input, select, textarea {
+            width: 100%; padding: 0.65rem; border: 1px solid var(--border);
+            border-radius: var(--radius); font-size: 0.9rem; background: #fff; color: var(--text);
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
+        textarea { resize: vertical; min-height: 110px; }
+
+        /* Fast-Inject Preset Chips */
+        .preset-container { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+        .chip {
+            background: #f1f5f9; border: 1px solid #cbd5e1; padding: 0.25rem 0.6rem;
+            font-size: 0.75rem; font-weight: 500; border-radius: 50px; cursor: pointer; color: #475569;
+        }
+        .chip:hover { background: #e2e8f0; border-color: #94a3b8; }
+
+        /* Button Triggers */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+            padding: 0.65rem 1.25rem; border-radius: var(--radius); font-size: 0.9rem;
+            font-weight: 600; cursor: pointer; border: none; transition: all 0.15s;
+        }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-outline:hover { background: #f1f5f9; }
+        .btn-block { width: 100%; }
+        .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.78rem; border-radius: 4px; }
+
+        /* Queue Data Ledger tables */
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #f1f5f9; }
+        th { background-color: #f8fafc; font-weight: 600; color: #475569; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; }
+        tr:hover { background-color: #fafafa; }
+
+        /* Categorical & Delivery Badges */
+        .badge {
+            display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px;
+            font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
+        }
+        .bg-sms { background: #ecfeff; color: #0891b2; border: 1px solid #cffafe; }
+        .bg-email { background: #f3e8ff; color: #7e22ce; border: 1px solid #e9d5ff; }
+        .bg-inapp { background: #ffedd5; color: #c2410c; border: 1px solid #ffedd5; }
+        
+        .bg-sent { background: #dcfce7; color: #166534; }
+        .bg-pending { background: #fef9c3; color: #854d0e; }
+        .bg-critical { background: #fee2e2; color: #991b1b; font-weight: 700; }
+
+        .template-preview {
+            background-color: #f1f5f9; border-left: 4px solid var(--accent);
+            padding: 0.75rem; border-radius: 4px; font-family: monospace; font-size: 0.8rem;
+            white-space: pre-wrap; margin-top: 0.5rem; max-height: 120px; overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div>
+            <h1>Corporate Communication Matrix Engine</h1>
+            <p class="subtitle">Broadcast Alerts, Financial Disclosures, and Automated Compliance Notifications</p>
+        </div>
+    </header>
+
+    <nav class="tabs">
+        <button class="tab-btn active" onclick="switchView('compose-tab')">📣 Outbound Campaign Dispatch</button>
+        <button class="tab-btn" onclick="switchView('templates-tab')">📋 Core Transactional Templates</button>
+        <button class="tab-btn" onclick="switchView('logs-tab')">📊 Consolidated Communication Ledger</button>
+    </nav>
+
+    <!-- METRIC RUNWAY BOARD -->
+    <div class="metrics-grid">
+        <div class="metric-card sms">
+            <span class="metric-title">SMS Gateway Transmissions</span>
+            <span class="metric-value" id="countSMS">24,842 Delivered</span>
+        </div>
+        <div class="metric-card email">
+            <span class="metric-title">Email Server Deliveries</span>
+            <span class="metric-value" id="countEmail">148,910 Sent</span>
+        </div>
+        <div class="metric-card app">
+            <span class="metric-title">Active In-App Broadcasts</span>
+            <span class="metric-value" id="countInApp">3 Live Broadcasts</span>
+        </div>
+        <div class="metric-card" style="border-top-color: var(--success)">
+            <span class="metric-title">System Outbound Queue Status</span>
+            <span class="metric-value" id="countPending">0 Pending</span>
+        </div>
+    </div>
+
+    <!-- 1. CAMPAIGN DISPATCH CONSOLE -->
+    <section id="compose-tab" class="tab-content active">
+        <div class="module-layout">
+            <div class="card">
+                <h2>Configure & Broadcast</h2>
+                <form id="dispatchForm" onsubmit="triggerBroadcast(event)">
+                    <div class="form-group">
+                        <label for="msgChannel">Primary Transport Network</label>
+                        <select id="msgChannel" required onchange="handleChannelShift()">
+                            <option value="SMS">SMS Cellular Gateway</option>
+                            <option value="Email">Secure Corporate Email Relay</option>
+                            <option value="In-App">In-App Notification Canvas</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="msgTopic">Operational Communication Intent</label>
+                        <select id="msgTopic" required onchange="applyTopicPreset()">
+                            <option value="Custom">Custom Independent Announcement</option>
+                            <option value="Loan Reminder">⏰ Credit / Loan Repayment Reminder</option>
+                            <option value="Meeting Notification">📅 Stakeholder / Board Meeting Notification</option>
+                            <option value="Dividend Announcement">💰 Corporate Dividend Payout Announcement</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Fast-Inject Template Context Tokens</label>
+                        <div class="preset-container">
+                            <span class="chip" onclick="insertToken('{ClientName}')">[ClientName]</span>
+                            <span class="chip" onclick="insertToken('{Amount}')">[Amount]</span>
+                            <span class="chip" onclick="insertToken('{DueDate}')">[DueDate]</span>
+                            <span class="chip" onclick="insertToken('{MeetingRoom}')">[MeetingRoom]</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="emailSubjectWrapper" style="display: none;">
+                        <label for="msgSubject">Email Subject Header</label>
+                        <input type="text" id="msgSubject" placeholder="Enter formal email subject line">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="msgPayload">Message Compiling Body Area</label>
+                        <textarea id="msgPayload" required placeholder="Type payload string or load structural template..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="targetGroup">Target Recipient Segment</label>
+                        <select id="targetGroup" required>
+                            <option value="All Members">All Institutional Members / Clients</option>
+                            <option value="Active Borrowers">Active Borrowers Only</option>
+                            <option value="Equity Shareholders">Registered Board & Equity Shareholders</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block">Authorize & Send Transmission</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Real-time Pipeline Tracker</h2>
+                <p class="subtitle" style="margin-bottom: 1rem;">Direct window into outbound messaging queues</p>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Channel</th>
+                                <th>Context Category</th>
+                                <th>Recipients</th>
+                                <th>Status Metric</th>
+                            </tr>
+                        </thead>
+                        <tbody id="livePipelineBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. TRANSACTIONAL TEMPLATES SUBMODULE -->
+    <section id="templates-tab" class="tab-content">
+        <div class="card">
+            <h2>Authorized Structural Templates</h2>
+            <p class="subtitle" style="margin-bottom: 1.5rem;">Pre-approved system-wide layouts containing baseline transaction variables.</p>
+            
+            <div class="module-layout" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem;">
+                <div class="card" style="margin-bottom: 0;">
+                    <span class="badge bg-sms">SMS</span> <h3>Loan Reminder Standard</h3>
+                    <div class="template-preview" id="tmpl-loan">Dear {ClientName}, your scheduled loan instalment of USD {Amount} is due on or before {DueDate}. Please ensure accounts are funded to prevent automated penalties.</div>
+                </div>
+
+                <div class="card" style="margin-bottom: 0;">
+                    <span class="badge bg-email">Email</span> <h3>Dividend Payout Notice</h3>
+                    <div class="template-preview" id="tmpl-dividend">Subject: Announcement of Dividend Distribution Quarter 2\n\nDear Stakeholder {ClientName}, We are pleased to notify you that the Board has declared a dividend payout of {Amount} per share. Your credit distribution will be processed on {DueDate}.</div>
+                </div>
+
+                <div class="card" style="margin-bottom: 0;">
+                    <span class="badge bg-inapp">In-App</span> <h3>Annual General Meeting Call</h3>
+                    <div class="template-preview" id="tmpl-meeting">Important Notification: The Annual General Meeting is scheduled for {DueDate}. Venue confirmation: {MeetingRoom}. Attendance confirmation required via proxy interface.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. CONSOLIDATED HISTORICAL AUDIT LOGS -->
+    <section id="logs-tab" class="tab-content">
+        <div class="card">
+            <h2>System Communications Audit Vault</h2>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Transaction Unique ID</th>
+                            <th>Time Executed</th>
+                            <th>Transport Link</th>
+                            <th>Target Group Audience</th>
+                            <th>Dispatched Payload String Fragment</th>
+                            <th>Status Verification</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditLogsBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+    // System Local Tracking State Memory
+    let pipelineQueue = [
+        { timestamp: "12:31:05", channel: "SMS", topic: "Loan Reminder", target: "Active Borrowers", status: "Sent" },
+        { timestamp: "11:14:22", channel: "Email", topic: "Dividend Announcement", target: "Equity Shareholders", status: "Sent" },
+        { timestamp: "09:00:10", channel: "In-App", topic: "Meeting Notification", target: "All Members", status: "Sent" }
+    ];
+
+    let historicalAudit = [
+        { id: "TX-90124", time: "2026-05-19 14:20", channel: "Email", target: "Equity Shareholders", snippet: "Subject: Q1 Portfolio Evaluation Report and Dividend Calculations...", status: "Delivered (MTA Verified)" },
+        { id: "TX-90123", time: "2026-05-19 10:15", channel: "SMS", target: "Active Borrowers", snippet: "Urgent Balance Notice: Outstanding loan arrears of $145.00 overdue...", status: "Delivered (SMPP Handshake)" },
+        { id: "TX-90122", time: "2026-05-18 16:40", channel: "In-App", target: "All Members", snippet: "System Maintenance: Scheduled architecture updates from midnight...", status: "Read / Displayed" }
+    ];
+
+    // Counter State Values
+    let globalSMSCount = 24842;
+    let globalEmailCount = 148910;
+    let globalInAppCount = 3;
+
+    window.addEventListener('DOMContentLoaded', () => {
+        renderAllTables();
+    });
+
+    function switchView(targetTabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(targetTabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    // Interactive Field UI Form Controllers
+    function handleChannelShift() {
+        let channel = document.getElementById('msgChannel').value;
+        let subjectLine = document.getElementById('emailSubjectWrapper');
+        
+        if (channel === 'Email') {
+            subjectLine.style.display = 'block';
+        } else {
+            subjectLine.style.display = 'none';
+        }
+    }
+
+    function applyTopicPreset() {
+        let topic = document.getElementById('msgTopic').value;
+        let payloadField = document.getElementById('msgPayload');
+        let channelField = document.getElementById('msgChannel');
+
+        if (topic === "Loan Reminder") {
+            channelField.value = "SMS";
+            payloadField.value = document.getElementById('tmpl-loan').innerText;
+        } else if (topic === "Dividend Announcement") {
+            channelField.value = "Email";
+            payloadField.value = document.getElementById('tmpl-dividend').innerText;
+        } else if (topic === "Meeting Notification") {
+            channelField.value = "In-App";
+            payloadField.value = document.getElementById('tmpl-meeting').innerText;
+        }
+        handleChannelShift();
+    }
+
+    function insertToken(token) {
+        let payloadField = document.getElementById('msgPayload');
+        let cursorPosition = payloadField.selectionStart;
+        let text = payloadField.value;
+        payloadField.value = text.substring(0, cursorPosition) + token + text.substring(cursorPosition);
+        payloadField.focus();
+    }
+
+    // Outbound Processing Mechanics
+    function triggerBroadcast(e) {
+        e.preventDefault();
+        
+        let channel = document.getElementById('msgChannel').value;
+        let topic = document.getElementById('msgTopic').value;
+        let payload = document.getElementById('msgPayload').value;
+        let target = document.getElementById('targetGroup').value;
+
+        // Fetch exact clean time
+        let now = new Date();
+        let timeString = now.toTimeString().split(' ')[0];
+        let fullDateTimeString = now.toISOString().split('T')[0] + " " + timeString.substring(0, 5);
+
+        // Inject data into active screen list tracking arrays
+        pipelineQueue.unshift({
+            timestamp: timeString,
+            channel: channel,
+            topic: topic,
+            target: target,
+            status: "Sent"
+        });
+
+        historicalAudit.unshift({
+            id: "TX-" + Math.floor(90125 + Math.random() * 9999),
+            time: fullDateTimeString,
+            channel: channel,
+            target: target,
+            snippet: payload.substring(0, 65) + "...",
+            status: "Dispatched Successfully"
+        });
+
+        // Step up dynamic metrics
+        if (channel === 'SMS') globalSMSCount++;
+        if (channel === 'Email') globalEmailCount++;
+        if (channel === 'In-App') globalInAppCount++;
+
+        // Clear layout state forms
+        document.getElementById('dispatchForm').reset();
+        document.getElementById('emailSubjectWrapper').style.display = 'none';
+        
+        renderAllTables();
+    }
+
+    // View Rendering Architecture
+    function renderAllTables() {
+        // Hydrate numeric metrics panels
+        document.getElementById('countSMS').innerText = globalSMSCount.toLocaleString() + " Delivered";
+        document.getElementById('countEmail').innerText = globalEmailCount.toLocaleString() + " Sent";
+        document.getElementById('countInApp').innerText = globalInAppCount.toLocaleString() + " Live Broadcasts";
+
+        // Build live process tracking table
+        let liveBody = document.getElementById('livePipelineBody');
+        liveBody.innerHTML = "";
+        pipelineQueue.forEach(item => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><code>${item.timestamp}</code></td>
+                <td><span class="badge bg-${item.channel.toLowerCase().replace('-', '')}">${item.channel}</span></td>
+                <td><strong>${item.topic}</strong></td>
+                <td>${item.target}</td>
+                <td><span class="badge bg-sent">${item.status}</span></td>
+            `;
+            liveBody.appendChild(tr);
+        });
+
+        // Build historical deep storage log display table
+        let auditBody = document.getElementById('auditLogsBody');
+        auditBody.innerHTML = "";
+        historicalAudit.forEach(log => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><code>${log.id}</code></td>
+                <td><span style="color:var(--text-muted); font-size:0.8rem;">${log.time}</span></td>
+                <td><span class="badge bg-${log.channel.toLowerCase().replace('-', '')}">${log.channel}</span></td>
+                <td><strong>${log.target}</strong></td>
+                <td><span style="font-family: monospace;">${log.snippet}</span></td>
+                <td><span style="color:var(--success); font-weight:600;">${log.status}</span></td>
+            `;
+            auditBody.appendChild(tr);
+        });
+    }
+</script>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+</body>
+</html>
